@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAE Gender Balance Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#fff5f8;--surface:#fff;--surface2:#fdeef4;--border:#f0c8d8;
+  --b1:#c2185b;--b2:#e91e8c;--b3:#f06292;--b4:#f8bbd0;--b5:#fce4ec;
+  --lilac:#ce93d8;--lilac2:#f3e5f5;
+  --gold:#b8860b;--gold-light:#fef8e1;
+  --text:#1a0a12;--muted:#a07888;--green:#2e7d52;--red:#c62828;
+  --font:'Segoe UI','Calibri','Trebuchet MS',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+.hdr{background:linear-gradient(135deg,#7a1040,#c2185b 55%,#e91e8c);padding:22px 36px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;box-shadow:0 4px 24px rgba(194,24,91,.2)}
+.hdr::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#c2185b,#e91e8c 50%,#ce93d8)}
+.hdr::after{content:'';position:absolute;top:-60px;right:-60px;width:360px;height:360px;background:radial-gradient(circle,rgba(255,200,220,.1),transparent 60%);pointer-events:none}
+.flag{display:flex;gap:3px;flex-shrink:0}
+.flag .r{width:6px;height:44px;background:#ef4135;border-radius:3px}
+.flag .s{display:flex;flex-direction:column;width:6px;height:44px;border-radius:3px;overflow:hidden}
+.flag .s div{flex:1}
+.flag .s .g{background:#00843D}.flag .s .w{background:#fff}.flag .s .b{background:#111}
+.hdr-txt{margin-left:6px;flex:1}
+.hdr-txt h1{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.hdr-txt p{font-size:14px;color:rgba(255,255,255,.6);margin-top:3px}
+.hdr-badge{margin-left:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:700;padding:6px 16px;border-radius:20px;letter-spacing:.8px;text-transform:uppercase;flex-shrink:0}
+.tabs-bar{background:var(--surface);border-bottom:2px solid var(--border)}
+.tabs{display:flex;padding:0 36px}
+.tab{padding:16px 28px;font-size:16px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .2s,border-color .2s;user-select:none}
+.tab:hover{color:var(--b1)}.tab.active{color:var(--b1);border-bottom-color:var(--b1)}
+.panel{display:none}.panel.active{display:block}
+.pills{display:flex;gap:16px;padding:22px 36px 0;flex-wrap:wrap}
+.pill{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 22px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(194,24,91,.08);transition:box-shadow .2s,transform .2s}
+.pill:hover{box-shadow:0 6px 20px rgba(194,24,91,.15);transform:translateY(-2px)}
+.pill-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.pi-b{background:linear-gradient(135deg,#fce4ec,#f8bbd0)}.pi-t{background:linear-gradient(135deg,#fce4f4,#f5c8e0)}.pi-y{background:linear-gradient(135deg,#f3e5f5,#e8d0f0)}
+.pill-num{font-size:34px;font-weight:800;color:var(--b1);line-height:1}
+.pill-lbl{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-top:3px}
+.filter-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin:18px 36px 0;padding:20px 24px;box-shadow:0 2px 8px rgba(194,24,91,.06)}
+.mode-toggle{display:flex;gap:0;margin-bottom:18px;background:var(--surface2);border-radius:10px;padding:4px;width:fit-content;border:1px solid var(--border)}
+.mode-btn{padding:9px 22px;font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:var(--font);transition:all .2s;user-select:none}
+.mode-btn.active{background:var(--b1);color:#fff;box-shadow:0 2px 8px rgba(194,24,91,.3)}
+.mode-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.filter-row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:7px;flex:1;min-width:200px}
+.fg select{background:var(--surface2);border:1.5px solid var(--border);color:var(--text);padding:11px 36px 11px 14px;border-radius:9px;font-family:var(--font);font-size:15px;font-weight:500;cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237a8aaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;transition:border-color .2s,box-shadow .2s}
+.fg select:focus{border-color:var(--b1);box-shadow:0 0 0 3px rgba(194,24,91,.15)}
+.mode-panel{display:none}.mode-panel.active{display:block}
+.cat-indicator-count{font-size:13px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.cat-indicator-count span{font-weight:700;color:var(--b1)}
+.kpi-row{display:flex;gap:14px;padding:16px 36px 0;flex-wrap:wrap}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:18px 20px;flex:1;min-width:130px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(194,24,91,.06);transition:box-shadow .2s,transform .2s;text-align:center; }
+.kpi:hover{box-shadow:0 5px 18px rgba(194,24,91,.12);transform:translateY(-1px)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:13px 13px 0 0}
+.kpi.c1::before{background:var(--b1)}.kpi.c2::before{background:var(--b2)}.kpi.c3::before{background:var(--b3)}.kpi.c4::before{background:var(--b4)}.kpi.c5::before{background:var(--b5)}.kpi.c6::before{background:#b8860b}.kpi.c7::before{background:linear-gradient(90deg,#c2185b,#ce93d8)}.kpi.c8::before{background:#f06292}
+.kpi-lbl{font-size:14px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#000000;margin-bottom:9px}
+.kpi-val{font-size:38px;font-weight:800;line-height:1}
+.kpi.c1 .kpi-val{color:var(--b1)}.kpi.c2 .kpi-val{color:var(--b2)}.kpi.c3 .kpi-val{color:var(--b3)}.kpi.c4 .kpi-val{color:var(--b4)}.kpi.c5 .kpi-val{color:#3a8fd4}.kpi.c6 .kpi-val{color:#b8860b}.kpi.c7 .kpi-val{color:#b8860b}.kpi.c8 .kpi-val{color:#e91e8c;font-size:15px;font-weight:700;line-height:1.3;margin-top:4px;word-break:break-word}
+.kpi-meta{font-size:14px;color:#000000;margin-top:5px}
+.kpi-diff{font-size:12px;font-weight:600;margin-top:4px}
+.kpi-diff.pos{color:var(--green)}.kpi-diff.neg{color:var(--red)}.kpi-diff.neu{color:var(--muted)}
+.rank-row{display:flex;align-items:baseline;gap:5px;margin-top:4px}
+.rank-num{font-size:28px;font-weight:800;color:#b8860b}
+.rank-of{font-size:13px;color:var(--muted);font-weight:600}
+.rank-arrow{font-size:13px;font-weight:700;display:block;margin-top:3px}
+.rank-arrow.up{color:var(--green)}.rank-arrow.down{color:var(--red)}.rank-arrow.same{color:var(--muted)}
+.rank-prev{font-size:12px;color:var(--muted)}
+.cat-note{background:linear-gradient(135deg,#fce4ec,#f3e5f5);border:1px solid #f8bbd0;border-radius:10px;padding:10px 18px;font-size:13px;color:#c2185b;font-weight:600;margin:14px 36px 0;display:none}
+.cat-note.show{display:flex;align-items:center;gap:8px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px 36px 0}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:26px;box-shadow:0 2px 12px rgba(194,24,91,.07)}
+.chart-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px}
+.chart-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.chart-wrap{position:relative;height:300px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.li{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);font-weight:500}
+.ld{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.no-data{display:flex;align-items:center;justify-content:center;height:300px;color:var(--muted);font-size:14px;flex-direction:column;gap:8px}
+.info-strip{margin:18px 36px 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 26px;box-shadow:0 2px 8px rgba(194,24,91,.06)}
+.info-strip h4{font-size:13px;font-weight:700;color:var(--b1);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.info-desc{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+.firsts{display:flex;gap:12px;flex-wrap:wrap}
+.first-badge{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 16px;font-size:14px}
+.first-badge span{font-weight:700;color:var(--b1);display:block;font-size:10px;letter-spacing:.6px;text-transform:uppercase;margin-bottom:2px}
+.tbl-controls{display:flex;gap:16px;padding:22px 36px 0;flex-wrap:wrap;align-items:flex-end}
+.search-wrap{flex:1;min-width:220px;display:flex;flex-direction:column;gap:7px}
+.search-wrap label{font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.search-wrap input{background:var(--surface2);border:1.5px solid var(--border);color:var(--text);padding:11px 14px;border-radius:9px;font-family:var(--font);font-size:15px;outline:none;transition:border-color .2s;width:100%}
+.search-wrap input:focus{border-color:var(--b1);box-shadow:0 0 0 3px rgba(194,24,91,.15)}
+.tbl-wrap{margin:18px 36px 36px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:auto;box-shadow:0 2px 12px rgba(194,24,91,.07)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead{background:linear-gradient(135deg,#7a1040,#c2185b);color:#fff}
+thead th{padding:14px 16px;text-align:left;font-size:12px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;white-space:nowrap}
+thead th.num{text-align:center}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+tbody tr:hover{background:#fce4ec}
+tbody tr:last-child{border-bottom:none}
+td{padding:13px 16px;vertical-align:middle}
+td.num{text-align:center}
+.tbl-rep{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:2px}
+.tbl-ind{font-weight:600;color:var(--text);line-height:1.4}
+.chip-score{display:inline-block;background:linear-gradient(135deg,#fce4ec,#f8bbd0);color:var(--b1);font-weight:700;font-size:13px;padding:4px 12px;border-radius:20px}
+.chip-rank{display:inline-flex;font-weight:700;font-size:13px;color:#b8860b;background:#fef8e1;padding:4px 12px;border-radius:20px}
+.chip-year{background:#f0f4f9;color:var(--muted);font-size:12px;font-weight:600;padding:3px 10px;border-radius:10px}
+.chip-cat{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:#f3e5f5;color:#7b1fa2;border:1px solid #ce93d8}
+.chg-up{color:var(--green);font-weight:600;font-size:13px}
+.chg-down{color:var(--red);font-weight:600;font-size:13px}
+.chg-same{color:var(--muted);font-weight:600;font-size:13px}
+.first-cell{font-size:13px;color:var(--text);font-weight:500}
+.no-rows{text-align:center;padding:44px;color:var(--muted);font-size:14px}
+.footer{text-align:center;padding:18px;font-size:13px;color:var(--muted);border-top:1px solid var(--border);background:var(--surface);margin-top:20px}
+@media(max-width:900px){
+  .charts-grid{grid-template-columns:1fr;padding:16px}
+  .pills,.kpi-row,.filter-section,.tbl-controls,.info-strip,.cat-note{padding-left:16px;padding-right:16px}
+  .filter-section,.tbl-wrap{margin-left:16px;margin-right:16px}
+  .hdr,.tabs{padding-left:16px;padding-right:16px}
+  .tbl-wrap{margin:16px}
+}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="flag">
+    <div class="r"></div>
+    <div class="s"><div class="g"></div><div class="w"></div><div class="b"></div></div>
+  </div>
+  <div class="hdr-txt" style="margin-left:8px">
+    <h1>&#127462;&#127466; UAE Gender Balance Dashboard</h1>
+    <p>Benchmarking UAE against G7 &middot; G20 &middot; GCC &middot; World across international gender indicators</p>
+  </div>
+  <div class="hdr-badge">Live Data</div>
+</div>
+<div class="tabs-bar">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('dashboard',this)">&#128202; Dashboard</div>
+    <div class="tab" onclick="switchTab('details',this)">&#128203; Indicator Details</div>
+  </div>
+</div>
+<div id="panel-dashboard" class="panel active">
+  <div class="pills">
+    <div class="pill"><div class="pill-icon pi-b">&#128203;</div><div><div class="pill-num" id="pill-reports">—</div><div class="pill-lbl">Reports</div></div></div>
+    <div class="pill"><div class="pill-icon pi-t">&#128202;</div><div><div class="pill-num" id="pill-inds">—</div><div class="pill-lbl">Indicators</div></div></div>
+    <div class="pill"><div class="pill-icon pi-y">&#127757;</div><div><div class="pill-num" id="pill-cats">—</div><div class="pill-lbl">Categories</div></div></div>
+  </div>
+  <div class="filter-section">
+    <div class="mode-toggle">
+      <div class="mode-btn active" id="btn-cat" onclick="setMode('category')">&#127991;&#65039; By Category</div>
+      <div class="mode-btn" id="btn-rep" onclick="setMode('report')">&#128193; By Report</div>
+    </div>
+    <div class="mode-panel active" id="mode-category">
+      <div class="mode-label">&#127991;&#65039; Category</div>
+      <div class="filter-row">
+        <div class="fg" style="max-width:400px"><select id="catSel" onchange="renderCategory()"></select></div>
+      </div>
+      <div class="cat-indicator-count" id="catCount"></div>
+    </div>
+    <div class="mode-panel" id="mode-report">
+      <div class="filter-row">
+        <div class="fg"><div class="mode-label">&#128193; Report</div><select id="rSel" onchange="onReport()"></select></div>
+        <div class="fg"><div class="mode-label">&#128269; Indicator</div><select id="iSel" onchange="renderIndicator()"></select></div>
+      </div>
+    </div>
+  </div>
+  <div class="cat-note" id="catNote"><span>&#128202;</span><span id="catNoteText">Showing averages across this category</span></div>
+  <div class="kpi-row">
+    <div class="kpi c1"><div class="kpi-lbl">&#127462;&#127466; UAE Score</div><div class="kpi-val" id="k-uae">—</div><div class="kpi-meta" id="k-yr"></div></div>
+    <div class="kpi c2"><div class="kpi-lbl">G7 Average</div><div class="kpi-val" id="k-g7">—</div><div class="kpi-diff" id="d-g7"></div></div>
+    <div class="kpi c3"><div class="kpi-lbl">G20 Average</div><div class="kpi-val" id="k-g20">—</div><div class="kpi-diff" id="d-g20"></div></div>
+    <div class="kpi c4"><div class="kpi-lbl">GCC Average</div><div class="kpi-val" id="k-gcc">—</div><div class="kpi-diff" id="d-gcc"></div></div>
+    <div class="kpi c5"><div class="kpi-lbl">World Average</div><div class="kpi-val" id="k-wld">—</div><div class="kpi-diff" id="d-wld"></div></div>
+    <div class="kpi c6" id="kpi-rank-card">
+      <div class="kpi-lbl">&#127942; UAE Global Rank</div>
+      <div class="rank-row"><div class="rank-num" id="k-rank">—</div><div class="rank-of" id="k-rank-of"></div></div>
+      <div class="rank-arrow" id="rank-arrow"></div>
+      <div class="rank-prev" id="rank-prev"></div>
+    </div>
+    <div class="kpi c7"><div class="kpi-lbl">&#127757; Countries in Report</div><div class="kpi-val" id="k-ctry">—</div><div class="kpi-meta" id="k-ctry-lbl"></div></div>
+    <div class="kpi c8"><div class="kpi-lbl">&#127970; Responsible Entity</div><div class="kpi-val" id="k-entity" style="font-size:15px;font-weight:700;line-height:1.4;margin-top:4px;word-break:break-word">—</div></div>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Score Comparison</div>
+      <div class="chart-sub" id="bar-sub">UAE vs benchmark groups</div>
+      <div class="chart-wrap"><canvas id="barC"></canvas><div class="no-data" id="barND" style="display:none">No data available</div></div>
+      <div class="legend">
+        <div class="li"><div class="ld" style="background:#c2185b"></div>UAE</div>
+        <div class="li"><div class="ld" style="background:#e91e8c"></div>G7</div>
+        <div class="li"><div class="ld" style="background:#f06292"></div>G20</div>
+        <div class="li"><div class="ld" style="background:#f8bbd0"></div>GCC</div>
+        <div class="li"><div class="ld" style="background:#fce4ec"></div>World</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">UAE Trend Over Time</div>
+      <div class="chart-sub" id="trnd-sub">Historical UAE score</div>
+      <div class="chart-wrap"><canvas id="trnC"></canvas><div class="no-data" id="trnND" style="display:none">Not enough trend data</div></div>
+      <div class="legend"><div class="li"><div class="ld" style="background:#c2185b;border-radius:50%"></div>UAE Score</div></div>
+    </div>
+  </div>
+  <div class="info-strip" id="infoStrip">
+    <h4>&#8505;&#65039; About this Indicator</h4>
+    <div class="info-desc" id="info-desc">Select an indicator to see its description.</div>
+    <div class="firsts" id="info-firsts"></div>
+  </div>
+  <div class="footer">Sources: Women Business &amp; the Law &nbsp;&middot;&nbsp; Global Gender Gap Report &nbsp;&middot;&nbsp; Social Progress Index &nbsp;&middot;&nbsp; and more</div>
+</div>
+<div id="panel-details" class="panel">
+  <div class="tbl-controls">
+    <div class="fg" style="max-width:220px"><label>&#128193; Report</label><select id="tblRSel" onchange="renderTable()"></select></div>
+    <div class="fg" style="max-width:220px"><label>&#127991;&#65039; Category</label><select id="tblCatSel" onchange="renderTable()"></select></div>
+    <div class="search-wrap"><label>&#128269; Search</label><input type="text" id="tblSearch" placeholder="Search indicators..." oninput="renderTable()"></div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>Report &nbsp;&middot;&nbsp; Indicator</th><th>Category</th>
+        <th class="num">Year</th><th class="num">UAE Score</th><th class="num">Rank</th><th class="num">Change</th>
+        <th>&#127760; First Globally</th><th>&#127757; First Arab</th><th>First GCC</th>
+      </tr></thead>
+      <tbody id="tblBody"></tbody>
+    </table>
+  </div>
+</div>
+<script>
+const DATA={DATA_JS};
+const REPORT_COUNTRIES={RC_JS};
+const CATS={CATS_JS};
+const IND_TO_CAT={};
+Object.entries(CATS).forEach(([cat,inds])=>inds.forEach(ind=>IND_TO_CAT[ind]=cat));
+const BLUES=['#c2185b','#e91e8c','#f06292','#d4607e','#ce93d8'];
+const BLUES_B=['#880e4f','#c2185b','#d4507a','#c04870','#b068c8'];
+let barChart=null,trnChart=null,currentMode='category';
+
+function fmt(v){if(v===null||v===undefined)return'—';if(v>=100)return v.toFixed(1);if(v>=10)return v.toFixed(1);if(v>=1)return v.toFixed(2);return v.toFixed(3);}
+function setDiff(uae,bench,el){if(uae===null||bench===null||uae===undefined||bench===undefined){el.textContent='';return;}const d=uae-bench;el.textContent=(d>0.001?'▲ +':d<-0.001?'▼ -':'= ')+fmt(Math.abs(d))+' vs UAE';el.className='kpi-diff '+(d>0.001?'pos':d<-0.001?'neg':'neu');}
+function avgArr(arr){const v=arr.filter(x=>x!==null&&x!==undefined&&!isNaN(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;}
+
+function switchTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+  if(id==='details')renderTable();
+}
+
+function setMode(m){
+  currentMode=m;
+  document.getElementById('btn-cat').classList.toggle('active',m==='category');
+  document.getElementById('btn-rep').classList.toggle('active',m==='report');
+  document.getElementById('mode-category').classList.toggle('active',m==='category');
+  document.getElementById('mode-report').classList.toggle('active',m==='report');
+  document.getElementById('infoStrip').style.display=m==='report'?'block':'none';
+  document.getElementById('catNote').classList.toggle('show',m==='category');
+  document.getElementById('kpi-rank-card').style.display=m==='report'?'block':'none';
+  if(m==='category')renderCategory();else renderIndicator();
+}
+
+function init(){
+  const reports=Object.keys(DATA.bar_data);
+  const totalInds=Object.values(DATA.bar_data).reduce((s,v)=>s+Object.keys(v).length,0);
+  document.getElementById('pill-reports').textContent=reports.length;
+  document.getElementById('pill-inds').textContent=totalInds;
+  document.getElementById('pill-cats').textContent=Object.keys(CATS).length;
+  const cSel=document.getElementById('catSel');
+  Object.keys(CATS).forEach(cat=>{const o=document.createElement('option');o.value=o.textContent=cat;cSel.appendChild(o);});
+  const rSel=document.getElementById('rSel');
+  reports.forEach(r=>{const o=document.createElement('option');o.value=o.textContent=r;rSel.appendChild(o);});
+  fillInds(reports[0]);
+  const tRSel=document.getElementById('tblRSel');
+  let ao=document.createElement('option');ao.value='';ao.textContent='All Reports';tRSel.appendChild(ao);
+  reports.forEach(r=>{const o=document.createElement('option');o.value=o.textContent=r;tRSel.appendChild(o);});
+  const tCSel=document.getElementById('tblCatSel');
+  ao=document.createElement('option');ao.value='';ao.textContent='All Categories';tCSel.appendChild(ao);
+  Object.keys(CATS).forEach(cat=>{const o=document.createElement('option');o.value=o.textContent=cat;tCSel.appendChild(o);});
+  renderCategory();
+}
+
+function fillInds(report){const s=document.getElementById('iSel');s.innerHTML='';Object.keys(DATA.bar_data[report]||{}).sort().forEach(i=>{const o=document.createElement('option');o.value=o.textContent=i;s.appendChild(o);});}
+function onReport(){fillInds(document.getElementById('rSel').value);renderIndicator();}
+
+function renderCategory(){
+  const cat=document.getElementById('catSel').value;
+  const catInds=CATS[cat]||[];
+  const entries=[];
+  Object.values(DATA.bar_data).forEach(inds=>{catInds.forEach(ind=>{if(inds[ind])entries.push(inds[ind]);});});
+  if(!entries.length)return;
+  const uae=avgArr(entries.map(e=>e.UAE));
+  const g7=avgArr(entries.map(e=>e.G7_avg));
+  const g20=avgArr(entries.map(e=>e.G20_avg));
+  const gcc=avgArr(entries.map(e=>e.GCC_avg));
+  const wld=avgArr(entries.map(e=>e.World_avg));
+  document.getElementById('catCount').innerHTML='<span>'+entries.length+'</span> indicators in this category';
+  document.getElementById('catNoteText').textContent='Showing average scores across '+entries.length+' indicators in this category';
+  document.getElementById('k-uae').textContent=fmt(uae);
+  document.getElementById('k-g7').textContent=fmt(g7);
+  document.getElementById('k-g20').textContent=fmt(g20);
+  document.getElementById('k-gcc').textContent=fmt(gcc);
+  document.getElementById('k-wld').textContent=fmt(wld);
+  document.getElementById('k-yr').textContent='Average across '+entries.length+' indicators';
+  setDiff(uae,g7,document.getElementById('d-g7'));
+  setDiff(uae,g20,document.getElementById('d-g20'));
+  setDiff(uae,gcc,document.getElementById('d-gcc'));
+  setDiff(uae,wld,document.getElementById('d-wld'));
+  document.getElementById('k-ctry').textContent='—';
+  document.getElementById('k-ctry-lbl').textContent='Multiple reports';
+  document.getElementById('k-entity').textContent='—';
+  document.getElementById('bar-sub').textContent='Average score — '+cat;
+  drawBar([uae,g7,g20,gcc,wld]);
+  const ym={};
+  Object.values(DATA.trend_data).forEach(rt=>{catInds.forEach(ind=>{if(!rt[ind])return;rt[ind].forEach(pt=>{if(!ym[pt.year])ym[pt.year]=[];ym[pt.year].push(pt.score);});});});
+  const ty=Object.keys(ym).map(Number).sort((a,b)=>a-b);
+  const ts=ty.map(y=>avgArr(ym[y]));
+  document.getElementById('trnd-sub').textContent='Average UAE trajectory '+(ty[0]||'')+' to '+(ty[ty.length-1]||'');
+  drawTrend(ty,ts);
+}
+
+function renderIndicator(){
+  const report=document.getElementById('rSel').value;
+  const ind=document.getElementById('iSel').value;
+  const bd=DATA.bar_data[report]&&DATA.bar_data[report][ind];
+  const td=DATA.trend_data[report]&&DATA.trend_data[report][ind];
+  if(!bd)return;
+  document.getElementById('k-uae').textContent=fmt(bd.UAE);
+  document.getElementById('k-g7').textContent=fmt(bd.G7_avg);
+  document.getElementById('k-g20').textContent=fmt(bd.G20_avg);
+  document.getElementById('k-gcc').textContent=fmt(bd.GCC_avg);
+  document.getElementById('k-wld').textContent=fmt(bd.World_avg);
+  document.getElementById('k-yr').textContent='Latest: '+bd.latest_year;
+  setDiff(bd.UAE,bd.G7_avg,document.getElementById('d-g7'));
+  setDiff(bd.UAE,bd.G20_avg,document.getElementById('d-g20'));
+  setDiff(bd.UAE,bd.GCC_avg,document.getElementById('d-gcc'));
+  setDiff(bd.UAE,bd.World_avg,document.getElementById('d-wld'));
+  const total=REPORT_COUNTRIES[report]||'—';
+  document.getElementById('k-rank').textContent=bd.rank&&bd.rank!=='-'?bd.rank:'—';
+  document.getElementById('k-ctry').textContent=total;
+  document.getElementById('k-ctry-lbl').textContent=report.length>32?report.slice(0,32)+'...':report;
+  const arEl=document.getElementById('rank-arrow');
+  const rd=bd.rank_diff||'';
+  if(rd.indexOf('▲')>=0){arEl.textContent='▲ Improved '+rd.replace('▲','').trim()+' places';arEl.className='rank-arrow up';}
+  else if(rd.indexOf('▼')>=0){arEl.textContent='▼ Dropped '+rd.replace('▼','').trim()+' places';arEl.className='rank-arrow down';}
+  else{arEl.textContent=rd==='►0'?'► No change':'';arEl.className='rank-arrow same';}
+  document.getElementById('rank-prev').textContent=bd.prev_rank&&bd.prev_rank!=='-'?'Previous: #'+bd.prev_rank:'';
+  document.getElementById('k-entity').textContent=bd.entity&&bd.entity!=='-'&&bd.entity!=='Not Available'?bd.entity:'—';
+  document.getElementById('bar-sub').textContent='"'+(ind.length>65?ind.slice(0,65)+'...':ind)+'" — '+bd.latest_year;
+  document.getElementById('info-desc').textContent=bd.description||'No description available.';
+  const fc=document.getElementById('info-firsts');fc.innerHTML='';
+  var firsts=[['Global',bd.first_global],['Arab',bd.first_arab],['GCC',bd.first_gcc],['G20',bd.first_g20]];
+  firsts.forEach(function(pair){
+    var lbl=pair[0],val=pair[1];
+    if(!val||val==='-')return;
+    var el=document.createElement('div');el.className='first-badge';
+    el.innerHTML='<span>'+lbl+'</span>'+val;fc.appendChild(el);
+  });
+  drawBar([bd.UAE,bd.G7_avg,bd.G20_avg,bd.GCC_avg,bd.World_avg]);
+  if(!td||td.length<2){document.getElementById('trnND').style.display='flex';document.getElementById('trnC').style.display='none';return;}
+  document.getElementById('trnd-sub').textContent='UAE trajectory '+td[0].year+' to '+td[td.length-1].year;
+  drawTrend(td.map(function(x){return x.year;}),td.map(function(x){return x.score;}));
+}
+
+function drawBar(vals){
+  if(barChart)barChart.destroy();
+  var has=vals.some(function(v){return v!==null&&v!==undefined;});
+  document.getElementById('barND').style.display=has?'none':'flex';
+  document.getElementById('barC').style.display=has?'block':'none';
+  if(!has)return;
+  var dlPlugin={id:'dl',afterDatasetsDraw:function(c){var ctx=c.ctx,data=c.data;ctx.save();data.datasets.forEach(function(ds,di){c.getDatasetMeta(di).data.forEach(function(bar,ji){var v=ds.data[ji];if(v===null||v===undefined)return;ctx.font='700 13px Calibri,sans-serif';ctx.fillStyle=BLUES[ji];ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(fmt(v),bar.x,bar.y-4);});});ctx.restore();}};
+  barChart=new Chart(document.getElementById('barC').getContext('2d'),{
+    type:'bar',plugins:[dlPlugin],
+    data:{labels:['UAE','G7 Avg','G20 Avg','GCC Avg','World Avg'],datasets:[{data:vals,backgroundColor:BLUES,borderColor:BLUES_B,borderWidth:1.5,borderRadius:7,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:24}},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#f0c8d8',borderWidth:1,titleColor:'#1a0a12',bodyColor:'#c2185b',padding:10,callbacks:{label:function(c){return '  Score: '+fmt(c.parsed.y);}}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#a07888',font:{family:'Calibri,sans-serif',size:14,weight:'500'}}},y:{grid:{color:'rgba(240,180,200,.2)'},ticks:{color:'#a07888',font:{family:'Calibri,sans-serif',size:13}},beginAtZero:true}}}
+  });
+}
+
+function drawTrend(years,scores){
+  if(trnChart)trnChart.destroy();
+  if(!years||years.length<2){document.getElementById('trnND').style.display='flex';document.getElementById('trnC').style.display='none';return;}
+  document.getElementById('trnND').style.display='none';document.getElementById('trnC').style.display='block';
+  var tCtx=document.getElementById('trnC').getContext('2d');
+  var g=tCtx.createLinearGradient(0,0,0,300);
+  g.addColorStop(0,'rgba(194,24,91,0.18)');g.addColorStop(1,'rgba(194,24,91,0.01)');
+  trnChart=new Chart(tCtx,{
+    type:'line',
+    data:{labels:years,datasets:[{label:'UAE',data:scores,borderColor:'#c2185b',backgroundColor:g,borderWidth:2.5,pointBackgroundColor:'#c2185b',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:4,pointHoverRadius:7,fill:true,tension:0.35}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#f0c8d8',borderWidth:1,titleColor:'#a07888',bodyColor:'#c2185b',padding:10,callbacks:{label:function(c){return '  UAE: '+fmt(c.parsed.y);}}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#a07888',font:{family:'Calibri,sans-serif',size:13},maxTicksLimit:10}},y:{grid:{color:'rgba(240,180,200,.2)'},ticks:{color:'#a07888',font:{family:'Calibri,sans-serif',size:13}}}}}
+  });
+}
+
+function chgHTML(r){if(!r||r==='-')return'<span class="chg-same">—</span>';if(r.indexOf('▲')>=0)return'<span class="chg-up">▲ '+r.replace('▲','').trim()+'</span>';if(r.indexOf('▼')>=0)return'<span class="chg-down">▼ '+r.replace('▼','').trim()+'</span>';return'<span class="chg-same">►</span>';}
+
+function renderTable(){
+  var fR=document.getElementById('tblRSel').value;
+  var fCat=document.getElementById('tblCatSel').value;
+  var q=(document.getElementById('tblSearch').value||'').toLowerCase();
+  var tb=document.getElementById('tblBody');tb.innerHTML='';
+  var n=0;
+  Object.keys(DATA.bar_data).forEach(function(rep){
+    if(fR&&rep!==fR)return;
+    var inds=DATA.bar_data[rep];
+    Object.keys(inds).forEach(function(ind){
+      var bd=inds[ind];
+      var cat=IND_TO_CAT[ind]||'—';
+      if(fCat&&cat!==fCat)return;
+      if(q&&ind.toLowerCase().indexOf(q)<0&&rep.toLowerCase().indexOf(q)<0)return;
+      n++;
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td><div class="tbl-rep">'+rep+'</div><div class="tbl-ind">'+ind+'</div></td>'+
+        '<td><span class="chip-cat">'+(cat!=='—'?cat:'—')+'</span></td>'+
+        '<td class="num"><span class="chip-year">'+bd.latest_year+'</span></td>'+
+        '<td class="num"><span class="chip-score">'+fmt(bd.UAE)+'</span></td>'+
+        '<td class="num"><span class="chip-rank">'+(bd.rank&&bd.rank!=='-'?'#'+bd.rank:'—')+'</span></td>'+
+        '<td class="num">'+chgHTML(bd.rank_diff)+'</td>'+
+        '<td><div class="first-cell">'+(bd.first_global||'—')+'</div></td>'+
+        '<td><div class="first-cell">'+(bd.first_arab||'—')+'</div></td>'+
+        '<td><div class="first-cell">'+(bd.first_gcc||'—')+'</div></td>';
+      tb.appendChild(tr);
+    });
+  });
+  if(n===0){var tr=document.createElement('tr');tr.innerHTML='<td colspan="9" class="no-rows">No indicators match your search.</td>';tb.appendChild(tr);}
+}
+
+init();
+
+</script>
+</body>
+</html>

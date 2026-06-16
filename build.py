@@ -112,7 +112,9 @@ def rank_diff(rank, prev):
 
 def clean(v):
     s = str(v).strip()
-    return "-" if s in ("nan", "", "Not Available") else s
+    if s in ("nan", "", "Not Available"): return "-"
+    s = s.replace('"', "'").replace('\\', '')
+    return s
 
 # ── Build DATA object ─────────────────────────────────────────────────────────
 bar_data   = {}
@@ -579,3 +581,26 @@ HTML = HTML.replace("{DATA_JS}", DATA_JS).replace("{RC_JS}", RC_JS).replace("{CA
 
 Path("index.html").write_text(HTML, encoding="utf-8")
 print(f"✅ index.html written ({len(HTML):,} bytes)")
+# ── Write index.html ──────────────────────────────────────────────────────────
+import json, re
+
+DATA    = {"bar_data": bar_data, "trend_data": trend_data}
+DATA_JS = json.dumps(DATA, ensure_ascii=False)
+RC_JS   = json.dumps(report_countries, ensure_ascii=False)
+CATS_JS = json.dumps(CATS, ensure_ascii=False)
+
+# Load HTML template
+TEMPLATE = open("template.html", encoding="utf-8").read()
+
+# Inject data
+HTML = TEMPLATE.replace("{DATA_JS}", DATA_JS).replace("{RC_JS}", RC_JS).replace("{CATS_JS}", CATS_JS)
+
+# Escape any </script> inside JS strings to prevent browser from closing script early
+script_open  = HTML.find("<script>\nconst DATA")
+script_close = HTML.rfind("</script>")
+inside = HTML[script_open+8:script_close]
+inside = inside.replace("<\/script>", "</script>").replace("</script>", "<\/script>")
+HTML = HTML[:script_open+8] + inside + HTML[script_close:]
+
+Path("index.html").write_text(HTML, encoding="utf-8")
+print(f"index.html written ({len(HTML):,} bytes)")
