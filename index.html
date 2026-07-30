@@ -48,15 +48,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .cat-indicator-count{font-size:13px;color:#333333;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
 .cat-indicator-count span{font-weight:700;color:var(--b1)}
 .kpi-row{display:flex;gap:14px;padding:16px 36px 0;flex-wrap:wrap}
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:18px 20px;flex:1;min-width:130px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(13,59,142,.05);transition:box-shadow .2s,transform .2s;text-align:center; }
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:18px 20px;flex:1;min-width:130px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(13,59,142,.05);transition:box-shadow .2s,transform .2s;text-align:center;display:flex;flex-direction:column;}
 .kpi:hover{box-shadow:0 5px 18px rgba(13,59,142,.1);transform:translateY(-1px)}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:13px 13px 0 0}
 .kpi.c1::before{background:var(--b1)}.kpi.c2::before{background:var(--b2)}.kpi.c3::before{background:var(--b3)}.kpi.c4::before{background:var(--b4)}.kpi.c5::before{background:var(--b5)}.kpi.c6::before{background:#7c3aed}.kpi.c7::before{background:linear-gradient(90deg,#0d3b8e,#5aa8e8)}.kpi.c8::before{background:#f06292}
-.kpi-lbl{font-size:14px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#000000;margin-bottom:9px}
-.kpi-val{font-size:38px;font-weight:800;line-height:1}
-.kpi.c1 .kpi-val{color:var(--b1)}.kpi.c2 .kpi-val{color:var(--b2)}.kpi.c3 .kpi-val{color:var(--b3)}.kpi.c4 .kpi-val{color:var(--b4)}.kpi.c5 .kpi-val{color:#3a8fd4}.kpi.c6 .kpi-val{color:#7c3aed}.kpi.c7 .kpi-val{color:#0369a1}.kpi.c8 .kpi-val{color:#0f766e;font-size:15px;font-weight:700;line-height:1.3;margin-top:4px;word-break:break-word}
+.kpi-lbl{font-size:14px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#000000;margin-bottom:9px;display:block}
+.kpi-val{font-size:38px;font-weight:800;line-height:1;display:block}
+.kpi.c1 .kpi-val{color:var(--b1)}.kpi.c2 .kpi-val{color:var(--b2)}.kpi.c3 .kpi-val{color:var(--b3)}.kpi.c4 .kpi-val{color:var(--b4)}.kpi.c5 .kpi-val{color:#3a8fd4}.kpi.c6 .kpi-val{color:#7c3aed;display:block}.kpi.c7 .kpi-val{color:#0369a1}.kpi.c8 .kpi-val{color:#0f766e;font-size:15px;font-weight:700;line-height:1.3;margin-top:4px;word-break:break-word}
 .kpi-meta{font-size:14px;color:#000000;margin-top:5px}
-.kpi-diff{font-size:12px;font-weight:600;margin-top:4px}
+.kpi-diff{font-size:12px;font-weight:600;margin-top:4px;display:block}
 .kpi-diff.pos{color:var(--green)}.kpi-diff.neg{color:var(--red)}.kpi-diff.neu{color:#555555}
 .rank-row{display:flex;align-items:baseline;gap:5px;margin-top:4px}
 .rank-num{font-size:28px;font-weight:800;color:#7c3aed}
@@ -175,12 +175,7 @@ td.num{text-align:center}
     <div class="kpi c3"><div class="kpi-lbl">G20 Average</div><div class="kpi-val" id="k-g20">—</div><div class="kpi-diff" id="d-g20"></div></div>
     <div class="kpi c4"><div class="kpi-lbl">GCC Average</div><div class="kpi-val" id="k-gcc">—</div><div class="kpi-diff" id="d-gcc"></div></div>
     <div class="kpi c5"><div class="kpi-lbl">World Average</div><div class="kpi-val" id="k-wld">—</div><div class="kpi-diff" id="d-wld"></div></div>
-    <div class="kpi c6" id="kpi-rank-card">
-      <div class="kpi-lbl">&#127942; UAE Global Rank</div>
-      <div class="rank-row"><div class="rank-num" id="k-rank">—</div></div>
-      <div class="rank-arrow" id="rank-arrow"></div>
-      <div class="rank-prev" id="rank-prev"></div>
-    </div>
+    <div class="kpi c6" id="kpi-rank-card"><div class="kpi-lbl">Global Rank</div><div class="kpi-val" id="k-rank">—</div><div class="kpi-diff" id="rank-arrow"></div></div>
     <div class="kpi c7"><div class="kpi-lbl">&#127757; Countries in Report</div><div class="kpi-val" id="k-ctry">—</div><div class="kpi-meta" id="k-ctry-lbl"></div></div>
     <div class="kpi c8"><div class="kpi-lbl">&#127970; Responsible Entity</div><div class="kpi-val" id="k-entity" style="font-size:15px;font-weight:700;line-height:1.4;margin-top:4px;word-break:break-word">—</div></div>
   </div>
@@ -324,10 +319,9 @@ function renderIndicator(){
   document.getElementById('k-ctry-lbl').textContent=report.length>32?report.slice(0,32)+'…':report;
   const arEl=document.getElementById('rank-arrow');
   const rd=bd.rank_diff||'';
-  if(rd.includes('▲')){arEl.textContent='▲ Improved '+rd.replace('▲','').trim()+' places';arEl.className='rank-arrow up';}
-  else if(rd.includes('▼')){arEl.textContent='▼ Dropped '+rd.replace('▼','').trim()+' places';arEl.className='rank-arrow down';}
-  else{arEl.textContent=rd==='►0'?'► No change':'';arEl.className='rank-arrow same';}
-  document.getElementById('rank-prev').textContent=bd.prev_rank&&bd.prev_rank!=='-'?'Previous: #'+bd.prev_rank:'';
+  if(rd.includes('▲')){arEl.textContent='▲ +'+rd.replace('▲','').trim()+' places';arEl.className='kpi-diff pos';}
+  else if(rd.includes('▼')){arEl.textContent='▼ -'+rd.replace('▼','').trim()+' places';arEl.className='kpi-diff neg';}
+  else{arEl.textContent=rd==='►0'?'► No change':'';arEl.className='kpi-diff neu';}
   document.getElementById('k-entity').textContent=bd.entity&&bd.entity!=='-'&&bd.entity!=='Not Available'?bd.entity:'—';
   document.getElementById('bar-sub').textContent='"'+(ind.length>65?ind.slice(0,65)+'…':ind)+'" — '+bd.latest_year;
   document.getElementById('info-desc').textContent=bd.description||'No description available.';
