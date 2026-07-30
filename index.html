@@ -177,7 +177,7 @@ td.num{text-align:center}
     <div class="kpi c5"><div class="kpi-lbl">World Average</div><div class="kpi-val" id="k-wld">—</div><div class="kpi-diff" id="d-wld"></div></div>
     <div class="kpi c6" id="kpi-rank-card">
       <div class="kpi-lbl">&#127942; UAE Global Rank</div>
-      <div class="rank-row"><div class="rank-num" id="k-rank">—</div><div class="rank-of" id="k-rank-of"></div></div>
+      <div class="rank-row"><div class="rank-num" id="k-rank">—</div></div>
       <div class="rank-arrow" id="rank-arrow"></div>
       <div class="rank-prev" id="rank-prev"></div>
     </div>
@@ -319,7 +319,7 @@ function renderIndicator(){
   setDiff(bd.UAE,bd.World_avg,document.getElementById('d-wld'));
   const total=REPORT_COUNTRIES[report]||'—';
   document.getElementById('k-rank').textContent=bd.rank&&bd.rank!=='-'?bd.rank:'—';
-  document.getElementById('k-rank-of').textContent=bd.rank&&bd.rank!=='-'?' of '+total:'';
+  document.getElementById('k-rank-of') && (document.getElementById('k-rank-of').textContent='');
   document.getElementById('k-ctry').textContent=total;
   document.getElementById('k-ctry-lbl').textContent=report.length>32?report.slice(0,32)+'…':report;
   const arEl=document.getElementById('rank-arrow');
