@@ -80,7 +80,7 @@ CATS = {
 
 # ── Load CSV ──────────────────────────────────────────────────────────────────
 print("Reading data.csv ...")
-df = pd.read_csv("data.csv", low_memory=False)
+df = pd.read_csv("data.csv", low_memory=False, encoding="latin-1")
 print(f"  {len(df):,} rows loaded")
 
 # ── UAE latest rows ───────────────────────────────────────────────────────────
